@@ -8,6 +8,7 @@ import (
 	"os"
 	"encoding/json"
 	"io/ioutil"
+	"strconv"
 )
 
 type Flight struct {
@@ -62,39 +63,43 @@ func getPort() string {
     return port
 }
 
-// /compute?home=SAF&budget=500&start=2022-03-26&end=2022-03-27
+// /compute?home=SAF&budget=1000&start=2022-05-10&end=2022-05-17&people=2
 func compute(c *gin.Context) {
-	// budget := c.Query("budget") // shortcut for c.Request.URL.Query().Get("budget")
-	// start := c.Query("start")
-	// end := c.Query("end")
-	// home := c.Query("home")
-	// people := c.Query("people")
-	budget := 1500 
-	start := "2022-04-10"
-	end := "2022-04-17"
-	startLocation := "JFK"
-	people := 3
-	log.Printf("Input data: budget = %v, start = %v, end = %v, startLocation = %v, people = %v", budget, start, end, startLocation, people)
+	budget := c.Query("budget") // shortcut for c.Request.URL.Query().Get("budget")
+	start := c.Query("start")
+	end := c.Query("end")
+	home := c.Query("home")
+	people := c.Query("people")
+	// budget := 1500 
+	// start := "2022-04-10"
+	// end := "2022-04-17"
+	// home := "JFK"
+	// people := 3
+	log.Printf("Input data: budget = %v, start = %v, end = %v, startLocation = %v, people = %v", budget, start, end, home, people)
 	
 	flights := getFlights()
 	curFlight := flights[0]
 	lat, long := getAirportCoords(curFlight.ArrivalLocation)
 	
-	hotels := getHotels(budget - flights[0].TicketCost, start, end, long, lat, people)
+	budgetI, err := strconv.Atoi(budget)
+	if err != nil {
+		panic(err)
+	}
+	hotels := getHotels(budgetI - flights[0].TicketCost, start, end, long, lat, people)
 	c.String(http.StatusOK, hotels)
 }
 
 func getFlights() []Flight{
 	flights := make([]Flight, 0)
-	flights = append(flights, Flight{"sample-id", "2022-04-10-12:30pm", "2022-04-10-4:00pm", "BOS", 100})
+	flights = append(flights, Flight{"sample-id", "2022-04-10-12:30pm", "2022-04-10-4:00pm", "CDG", 100})
 	return flights
 }
 
-func buildHotelQuery(budget int, start, end, longitude, latitude string, people int) string {
+func buildHotelQuery(budget int, start, end, longitude, latitude, people string) string {
 	return fmt.Sprintf("%v?&budget=%v&start=%v&end=%v&latitude=%v&longitude=%v&people=%v", FLIGHT_SERVICE_ADDRESS, budget, start, end, latitude, longitude, people)
 }
 
-func getHotels(budget int, start, end, longitude, latitude string, people int) string {
+func getHotels(budget int, start, end, longitude, latitude, people string) string {
 	log.Printf("Getting hotels")
 	resp, err := http.Get(buildHotelQuery(budget, start, end, longitude, latitude, people))
 	if err != nil {
