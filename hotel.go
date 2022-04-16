@@ -18,17 +18,23 @@ func buildHotelQuery(budget int, start, end, longitude, latitude, people string)
 	return fmt.Sprintf("%v?&budget=%v&start=%v&end=%v&latitude=%v&longitude=%v&people=%v", HOTEL_SERVICE_ADDRESS, budget, start, end, latitude, longitude, people)
 }
 
-func decodeHotel(hotelS string) Hotel {
-	hotel := Hotel{}
-	hotel.Name = gjson.Get(hotelS, "Name").String()
-	hotel.Locality = gjson.Get(hotelS, "Locality").String()
-	hotel.Country = gjson.Get(hotelS, "Country").String()
-	hotel.Price = gjson.Get(hotelS, "Price").Int()
-	hotel.StarRating = gjson.Get(hotelS, "StarRating").Int()
-	return hotel
+func decodeHotel(hotelS string) []Hotel {
+	hotels := make([]Hotel, 0)
+	log.Printf("Hotel string: %v\n", hotelS)
+	for _, v := range gjson.Parse(hotelS).Array() {
+		h := Hotel{}
+		log.Printf("Item: %v\n", v)
+		h.Name = v.Get("Name").String()
+		h.Locality = v.Get("Locality").String()
+		h.Country = v.Get("Country").String()
+		h.Price = v.Get("Price").Int()
+		h.StarRating = v.Get("StarRating").Int()
+		hotels = append(hotels, h)
+	}
+	return hotels
 }
 
-func getHotels(budget int, start, end, longitude, latitude, people string) Hotel {
+func getHotels(budget int, start, end, longitude, latitude, people string) []Hotel {
 	log.Printf("Getting hotels")
 	resp, err := http.Get(buildHotelQuery(budget, start, end, longitude, latitude, people))
 	if err != nil {

@@ -12,7 +12,7 @@ import (
 )
 
 type Vacation struct {
-	Lodging Hotel 
+	Lodging []Hotel 
 	Transportation RoundTrip 
 }
 
@@ -85,7 +85,7 @@ func compute(c *gin.Context) {
 	if err != nil {
 		panic(err)
 	}
-	hotel := getHotels(budgetI, start, end, long, lat, people)
-	vacation := Vacation{hotel, *roundTrip}
+	hotels := getHotels(budgetI, start, end, long, lat, people)
+	vacation := Vacation{hotels, *roundTrip}
 	c.PureJSON(http.StatusOK, vacation)
 }
