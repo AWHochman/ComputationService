@@ -11,6 +11,11 @@ import (
 	"strconv"
 )
 
+type Vacation struct {
+	Lodging Hotel 
+	Transportation RoundTrip 
+}
+
 var airportToCords map[string]interface{}
 var HOTEL_SERVICE_ADDRESS string 
 var FLIGHT_SERVICE_ADDRESS string 
@@ -65,12 +70,7 @@ func compute(c *gin.Context) {
 	home := c.Query("home")
 	people := c.Query("people")
 	preference := c.Query("preference")
-	// preference := c.Query("preference")
-	// budget := 1500 
-	// start := "2022-04-10"
-	// end := "2022-04-17"
-	// home := "JFK"
-	// people := 3
+
 	// log.Printf("Input data: budget = %v, start = %v, end = %v, startLocation = %v, people = %v", budget, start, end, home, people)
 	
 	log.Printf("Getting round trip\n")
@@ -85,24 +85,7 @@ func compute(c *gin.Context) {
 	if err != nil {
 		panic(err)
 	}
-	hotels := getHotels(budgetI, start, end, long, lat, people)
-	c.String(http.StatusOK, hotels)
-	c.PureJSON(http.StatusOK, roundTrip)
-}
-
-func buildHotelQuery(budget int, start, end, longitude, latitude, people string) string {
-	return fmt.Sprintf("%v?&budget=%v&start=%v&end=%v&latitude=%v&longitude=%v&people=%v", HOTEL_SERVICE_ADDRESS, budget, start, end, latitude, longitude, people)
-}
-
-func getHotels(budget int, start, end, longitude, latitude, people string) string {
-	log.Printf("Getting hotels")
-	resp, err := http.Get(buildHotelQuery(budget, start, end, longitude, latitude, people))
-	if err != nil {
-		log.Fatalln(err)
-	}
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	return string(body)
+	hotel := getHotels(budgetI, start, end, long, lat, people)
+	vacation := Vacation{hotel, *roundTrip}
+	c.PureJSON(http.StatusOK, vacation)
 }
