@@ -21,7 +21,7 @@ type Vacation struct {
 var airportToCords map[string]interface{}
 var HOTEL_SERVICE_ADDRESS string 
 var FLIGHT_SERVICE_ADDRESS string 
-var LOCAL = true 
+var LOCAL = false 
 
 func init() {
 	if LOCAL {
