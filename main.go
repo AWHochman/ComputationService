@@ -9,11 +9,13 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"strconv"
+	"time"
 )
 
 type Vacation struct {
 	Lodging []Hotel 
 	Transportation RoundTrip 
+	TotalPrice []int
 }
 
 var airportToCords map[string]interface{}
@@ -86,6 +88,28 @@ func compute(c *gin.Context) {
 		panic(err)
 	}
 	hotels := getHotels(budgetI, start, end, long, lat, people)
-	vacation := Vacation{hotels, *roundTrip}
+	log.Printf("About to calculate cost")
+	totalCost := calculateCost(hotels, *roundTrip, start, end)
+	log.Printf("About to initialize vacation object")
+	vacation := Vacation{hotels, *roundTrip, totalCost}
+	log.Printf("Done init vaca")
 	c.PureJSON(http.StatusOK, vacation)
+}
+
+func calculateCost(hotels []Hotel, transportation RoundTrip, start, end string) []int {
+	totalPrices := make([]int, 0)
+	log.Printf("here")
+	tStart, err := time.Parse("2006-01-02", start)
+	if err != nil {
+		panic(err)
+	}
+	tEnd, err := time.Parse("2006-01-02", end) 
+	if err != nil {
+		panic(err)
+	}
+	numDays := int(tEnd.Sub(tStart).Hours()/24)
+	for _, v := range hotels {
+		totalPrices = append(totalPrices, numDays*int(v.Price) + int(transportation.Cost))
+	}
+	return totalPrices
 }

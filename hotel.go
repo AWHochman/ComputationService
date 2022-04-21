@@ -20,10 +20,10 @@ func buildHotelQuery(budget int, start, end, longitude, latitude, people string)
 
 func decodeHotel(hotelS string) []Hotel {
 	hotels := make([]Hotel, 0)
-	log.Printf("Hotel string: %v\n", hotelS)
+	// log.Printf("Hotel string: %v\n", hotelS)
 	for _, v := range gjson.Parse(hotelS).Array() {
 		h := Hotel{}
-		log.Printf("Item: %v\n", v)
+		// log.Printf("Item: %v\n", v)
 		h.Name = v.Get("Name").String()
 		h.Locality = v.Get("Locality").String()
 		h.Country = v.Get("Country").String()
