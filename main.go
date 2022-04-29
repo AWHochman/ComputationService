@@ -28,6 +28,7 @@ func init() {
 		HOTEL_SERVICE_ADDRESS = "http://localhost:8081/api/query-hotels"
 		FLIGHT_SERVICE_ADDRESS = "http://localhost:1989"
 	} else {
+		FLIGHT_SERVICE_ADDRESS = "https://cloudflightservice.azurewebsites.net/api/QueryFlights"
 		HOTEL_SERVICE_ADDRESS = "https://hotel-service.azurewebsites.net/api/query-hotels"
 	}
 	// airportToCords = make(map[string]interface{})
@@ -80,6 +81,7 @@ func compute(c *gin.Context) {
 	log.Printf("Round trip successfully aquired\n")
 
 	log.Printf("Getting longitude and latitude of %v\n", roundTrip.DestinationAirport)
+	
 	lat, long := getAirportCoords(roundTrip.DestinationAirport)
 	log.Printf("Coordinate long: %v, lat: %v\n", lat, long)
 	

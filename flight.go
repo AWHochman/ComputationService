@@ -32,6 +32,7 @@ type Flight struct {
 // http://localhost:1989/departAirport=LGA&departDate=2022-04-22&returnDate=2022-04-29&numTravelers=2&preference=tropical
 func getFlight(start, end, people, home, preference string) *RoundTrip {
 	query := buildFlightQuery(start, end, people, home, preference)
+	log.Printf("Flight query built: %v", query)
 	log.Printf("Query: %v", query)
 	resp, err := http.Get(query)
 	if err != nil {
@@ -82,5 +83,5 @@ func getFlights() []Flight{
 }
 
 func buildFlightQuery(start, end, people, home, preference string) string {
-	return fmt.Sprintf("%v/departAirport=%v&departDate=%v&returnDate=%v&numTravelers=%v&preference=%v", FLIGHT_SERVICE_ADDRESS, home, start, end, people, preference)
+	return fmt.Sprintf("%v?departAirport=%v&departDate=%v&returnDate=%v&numTravelers=%v&preference=%v", FLIGHT_SERVICE_ADDRESS, home, start, end, people, preference)
 }
