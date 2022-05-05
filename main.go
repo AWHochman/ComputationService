@@ -35,7 +35,7 @@ func init() {
 	// airportToCords = make(map[string]interface{})
 	plan, err := ioutil.ReadFile("Datasets/airports.json")
 	if err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 	var data interface{}
 	err = json.Unmarshal(plan, &data)
@@ -74,6 +74,7 @@ func compute(c *gin.Context) {
 	home := c.DefaultQuery("home", "-1")
 	people := c.DefaultQuery("people", "1")
 	preference := c.DefaultQuery("preference", "major")
+	exclude := c.DefaultQuery("exclude", "[]")
 
 	if badInput(end, home) {
 		log.Printf("BAD INPUT SUPPLIED")
@@ -85,7 +86,7 @@ func compute(c *gin.Context) {
 	// log.Printf("Input data: budget = %v, start = %v, end = %v, startLocation = %v, people = %v", budget, start, end, home, people)
 	
 	log.Printf("Getting round trip\n")
-	roundTrip := getFlight(start, end, people, home, preference)
+	roundTrip := getFlight(start, end, people, home, preference, exclude)
 	log.Printf("Round trip successfully aquired\n")
 
 	log.Printf("Getting longitude and latitude of %v\n", roundTrip.DestinationAirport)
@@ -95,7 +96,7 @@ func compute(c *gin.Context) {
 	
 	budgetI, err := strconv.Atoi(budget)
 	if err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 	hotels := getHotels(budgetI, start, end, long, lat, people)
 	log.Printf("About to calculate cost")
@@ -115,11 +116,11 @@ func calculateCost(hotels []Hotel, transportation RoundTrip, start, end string) 
 	log.Printf("here")
 	tStart, err := time.Parse("2006-01-02", start)
 	if err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 	tEnd, err := time.Parse("2006-01-02", end) 
 	if err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 	numDays := int(tEnd.Sub(tStart).Hours()/24)
 	for _, v := range hotels {

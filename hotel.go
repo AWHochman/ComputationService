@@ -36,7 +36,9 @@ func decodeHotel(hotelS string) []Hotel {
 
 func getHotels(budget int, start, end, longitude, latitude, people string) []Hotel {
 	log.Printf("Getting hotels")
-	resp, err := http.Get(buildHotelQuery(budget, start, end, longitude, latitude, people))
+	hotelQuery := buildHotelQuery(budget, start, end, longitude, latitude, people)
+	log.Printf("Hotel query: %v", hotelQuery)
+	resp, err := http.Get(hotelQuery)
 	if err != nil {
 		log.Fatalln(err)
 	}
