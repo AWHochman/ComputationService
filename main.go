@@ -103,7 +103,7 @@ func compute(c *gin.Context) {
 	totalCost := calculateCost(hotels, *roundTrip, start, end)
 	log.Printf("About to initialize vacation object")
 	vacation := Vacation{hotels, *roundTrip, totalCost}
-	log.Printf("Done init vaca")
+	log.Printf("Done initializing vacation")
 	c.PureJSON(http.StatusOK, vacation)
 }
 

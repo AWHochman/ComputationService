@@ -12,6 +12,7 @@ type Hotel struct {
 	Name, Locality, Country string
 	Price int64
 	StarRating int64
+	ApproxDistanceFromAirport float64
 }
 
 func buildHotelQuery(budget int, start, end, longitude, latitude, people string) string {
@@ -29,6 +30,7 @@ func decodeHotel(hotelS string) []Hotel {
 		h.Country = v.Get("Country").String()
 		h.Price = v.Get("Price").Int()
 		h.StarRating = v.Get("StarRating").Int()
+		h.ApproxDistanceFromAirport = v.Get("DistanceFromAirport").Float()
 		hotels = append(hotels, h)
 	}
 	return hotels

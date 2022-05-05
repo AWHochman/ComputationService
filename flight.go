@@ -33,7 +33,6 @@ type Flight struct {
 func getFlight(start, end, people, home, preference, exclude string) *RoundTrip {
 	query := buildFlightQuery(start, end, people, home, preference, exclude)
 	log.Printf("Flight query built: %v", query)
-	log.Printf("Query: %v", query)
 	resp, err := http.Get(query)
 	if err != nil {
 		log.Fatalln(err)
