@@ -21,7 +21,7 @@ type Vacation struct {
 var airportToCords map[string]interface{}
 var HOTEL_SERVICE_ADDRESS string 
 var FLIGHT_SERVICE_ADDRESS string 
-var LOCAL = false 
+var LOCAL = true 
 
 func init() {
 	if LOCAL {
@@ -31,6 +31,7 @@ func init() {
 		FLIGHT_SERVICE_ADDRESS = "https://cloudflightservice.azurewebsites.net/api/QueryFlights"
 		HOTEL_SERVICE_ADDRESS = "https://hotel-service.azurewebsites.net/api/query-hotels"
 	}
+	FLIGHT_SERVICE_ADDRESS = "https://cloudflightservice.azurewebsites.net/api/QueryFlights"
 	// airportToCords = make(map[string]interface{})
 	plan, err := ioutil.ReadFile("Datasets/airports.json")
 	if err != nil {
@@ -67,12 +68,19 @@ func getPort() string {
 
 // /compute?home=SAF&budget=1000&start=2022-05-10&end=2022-05-17&people=2&preference=tropical
 func compute(c *gin.Context) {
-	budget := c.Query("budget") // shortcut for c.Request.URL.Query().Get("budget")
-	start := c.Query("start")
-	end := c.Query("end")
-	home := c.Query("home")
-	people := c.Query("people")
-	preference := c.Query("preference")
+	budget := c.DefaultQuery("budget", "1000") // shortcut for c.Request.URL.Query().Get("budget")
+	start := c.DefaultQuery("start", "-1")
+	end := c.DefaultQuery("end", time.Now().Format("2006-01-02"))
+	home := c.DefaultQuery("home", "-1")
+	people := c.DefaultQuery("people", "1")
+	preference := c.DefaultQuery("preference", "major")
+
+	if badInput(end, home) {
+		log.Printf("BAD INPUT SUPPLIED")
+		c.String(http.StatusOK, "Please specify an end date and the airport you would like to depart from")
+		return 
+	}
+	
 
 	// log.Printf("Input data: budget = %v, start = %v, end = %v, startLocation = %v, people = %v", budget, start, end, home, people)
 	
@@ -96,6 +104,10 @@ func compute(c *gin.Context) {
 	vacation := Vacation{hotels, *roundTrip, totalCost}
 	log.Printf("Done init vaca")
 	c.PureJSON(http.StatusOK, vacation)
+}
+
+func badInput(end, home string) bool {
+	return end == "-1" || home == "-1"
 }
 
 func calculateCost(hotels []Hotel, transportation RoundTrip, start, end string) []int {
