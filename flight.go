@@ -29,9 +29,10 @@ type Flight struct {
 // 	Name, Latitude_deg, Longitude_deg string
 // }
 
+
 // http://localhost:1989/departAirport=LGA&departDate=2022-04-22&returnDate=2022-04-29&numTravelers=2&preference=tropical
-func getFlight(start, end, people, home, preference, exclude string) *RoundTrip {
-	query := buildFlightQuery(start, end, people, home, preference, exclude)
+func getFlight(start, end, people, home, preference, exclude, list string) []RoundTrip {
+	query := buildFlightQuery(start, end, people, home, preference, exclude, list)
 	log.Printf("Flight query built: %v", query)
 	resp, err := http.Get(query)
 	if err != nil {
@@ -41,15 +42,20 @@ func getFlight(start, end, people, home, preference, exclude string) *RoundTrip 
 	if err != nil {
 		log.Fatalln(err)
 	}
-	return buildRoundTrip(string(body))
+
+	return buildRoundTrips(string(body))
 }
 
-func buildRoundTrip(body string) *RoundTrip {
-	roundTrip := RoundTrip{}
-	roundTrip.Cost = gjson.Get(body, "TotalRoundTripPrice").Float()
-	roundTrip.Outbound, roundTrip.DestinationAirport = buildTrip(gjson.Get(body, "outboundTrip").Array(), true)
-	roundTrip.Inbound, _ = buildTrip(gjson.Get(body, "returnTrip").Array(), false)
-	return &roundTrip 
+func buildRoundTrips(body string) []RoundTrip {
+	roundTrips := make([]RoundTrip, 0)
+	for _, v := range gjson.Parse(body).Array() {
+		roundTrip := RoundTrip{}
+		roundTrip.Cost = v.Get("TotalRoundTripPrice").Float()
+		roundTrip.Outbound, roundTrip.DestinationAirport = buildTrip(v.Get("outboundTrip").Array(), true)
+		roundTrip.Inbound, _ = buildTrip(v.Get("returnTrip").Array(), false)
+		roundTrips = append(roundTrips, roundTrip)
+	}
+	return roundTrips
 }
 
 func buildTrip(trip []gjson.Result, outbound bool) (*Trip, string) {
@@ -81,6 +87,6 @@ func getFlights() []Flight{
 	return flights
 }
 
-func buildFlightQuery(start, end, people, home, preference, exclude string) string {
-	return fmt.Sprintf("%v?departAirport=%v&departDate=%v&returnDate=%v&numTravelers=%v&preference=%v&exclude=%v", FLIGHT_SERVICE_ADDRESS, home, start, end, people, preference, exclude)
+func buildFlightQuery(start, end, people, home, preference, exclude, list string) string {
+	return fmt.Sprintf("%v?departAirport=%v&departDate=%v&returnDate=%v&numTravelers=%v&preference=%v&exclude=%v&list=%v", FLIGHT_SERVICE_ADDRESS, home, start, end, people, preference, exclude, list)
 }

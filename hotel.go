@@ -15,6 +15,20 @@ type Hotel struct {
 	ApproxDistanceFromAirport float64
 }
 
+func hotelThread(i, budget int, start, end, people string, roundTrip *RoundTrip, vacations []Vacation) {
+	log.Printf("Getting longitude and latitude of %v\n", roundTrip.DestinationAirport)
+	lat, long := getAirportCoords(roundTrip.DestinationAirport)
+	log.Printf("Coordinate long: %v, lat: %v\n", lat, long)
+	hotels := getHotels(budget, start, end, long, lat, people)
+	log.Printf("About to calculate cost")
+	totalCost := calculateCost(hotels, *roundTrip, start, end)
+	log.Printf("Hotels: %v", hotels)
+	log.Printf("About to initialize vacation object")
+	vacation := Vacation{hotels, *roundTrip, totalCost}
+	log.Printf("Done initializing vacation")
+	vacations[i] = vacation
+}
+
 func buildHotelQuery(budget int, start, end, longitude, latitude, people string) string {
 	return fmt.Sprintf("%v?&budget=%v&start=%v&end=%v&latitude=%v&longitude=%v&people=%v", HOTEL_SERVICE_ADDRESS, budget, start, end, latitude, longitude, people)
 }

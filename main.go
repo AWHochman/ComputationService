@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"strconv"
 	"time"
+	"sync"
 )
 
 type Vacation struct {
@@ -32,6 +33,7 @@ func init() {
 		HOTEL_SERVICE_ADDRESS = "https://hotel-service.azurewebsites.net/api/query-hotels"
 	}
 	FLIGHT_SERVICE_ADDRESS = "https://cloudflightservice.azurewebsites.net/api/QueryFlights"
+	HOTEL_SERVICE_ADDRESS = "https://hotel-service.azurewebsites.net/api/query-hotels"
 	// airportToCords = make(map[string]interface{})
 	plan, err := ioutil.ReadFile("Datasets/airports.json")
 	if err != nil {
@@ -75,6 +77,7 @@ func compute(c *gin.Context) {
 	people := c.DefaultQuery("people", "1")
 	preference := c.DefaultQuery("preference", "major")
 	exclude := c.DefaultQuery("exclude", "[]")
+	list := c.DefaultQuery("list", "true")
 
 	if badInput(end, home) {
 		log.Printf("BAD INPUT SUPPLIED")
@@ -85,26 +88,27 @@ func compute(c *gin.Context) {
 
 	// log.Printf("Input data: budget = %v, start = %v, end = %v, startLocation = %v, people = %v", budget, start, end, home, people)
 	
-	log.Printf("Getting round trip\n")
-	roundTrip := getFlight(start, end, people, home, preference, exclude)
-	log.Printf("Round trip successfully aquired\n")
+	log.Printf("Getting round trips\n")
+	roundTrips := getFlight(start, end, people, home, preference, exclude, list)
+	log.Printf("Round trips successfully aquired\n")
 
-	log.Printf("Getting longitude and latitude of %v\n", roundTrip.DestinationAirport)
-	
-	lat, long := getAirportCoords(roundTrip.DestinationAirport)
-	log.Printf("Coordinate long: %v, lat: %v\n", lat, long)
-	
-	budgetI, err := strconv.Atoi(budget)
-	if err != nil {
-		log.Fatalln(err)
+	vacations := make([]Vacation, len(roundTrips))
+
+	var wg sync.WaitGroup 
+	for i, v := range roundTrips {
+		wg.Add(1)
+		budgetI, err := strconv.Atoi(budget)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		go func(j int, v RoundTrip) {
+			hotelThread(j, budgetI, start, end, people, &v, vacations)
+			wg.Done()
+		}(i, v)
 	}
-	hotels := getHotels(budgetI, start, end, long, lat, people)
-	log.Printf("About to calculate cost")
-	totalCost := calculateCost(hotels, *roundTrip, start, end)
-	log.Printf("About to initialize vacation object")
-	vacation := Vacation{hotels, *roundTrip, totalCost}
-	log.Printf("Done initializing vacation")
-	c.PureJSON(http.StatusOK, vacation)
+	wg.Wait()
+	c.PureJSON(http.StatusOK, vacations)
 }
 
 func badInput(end, home string) bool {
