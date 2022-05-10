@@ -11,12 +11,18 @@ import (
 	"strconv"
 	"time"
 	"sync"
+	"sort"
 )
 
+type ReturnChan struct {
+	Vacation Vacation 
+	Index int 
+}
+
 type Vacation struct {
-	Lodging []Hotel 
+	Lodging Hotel 
 	Transportation RoundTrip 
-	TotalPrice []int
+	TotalPrice int
 }
 
 var airportToCords map[string]interface{}
@@ -94,30 +100,40 @@ func compute(c *gin.Context) {
 
 	vacations := make([]Vacation, len(roundTrips))
 
-	var wg sync.WaitGroup 
+	budgetI, err := strconv.Atoi(budget)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	var wg sync.WaitGroup
+	channel := make(chan ReturnChan) 
+	var mu sync.Mutex
 	for i, v := range roundTrips {
 		wg.Add(1)
-		budgetI, err := strconv.Atoi(budget)
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-		go func(j int, v RoundTrip) {
-			hotelThread(j, budgetI, start, end, people, &v, vacations)
+		go func(j, budget int, v RoundTrip) {
+			hotelThread(j, budgetI, start, end, people, &v, vacations, channel, &mu)
 			wg.Done()
-		}(i, v)
+		}(i, budgetI, v)
+		time.Sleep(time.Millisecond*500)
 	}
-	wg.Wait()
-	c.PureJSON(http.StatusOK, vacations)
+
+	go func() {
+		wg.Wait()
+		close(channel)
+	}()
+
+	for obj := range channel {
+		vacations[obj.Index] = obj.Vacation
+	}
+
+	c.PureJSON(http.StatusOK, sortVacations(vacations))
 }
 
 func badInput(end, home string) bool {
 	return end == "-1" || home == "-1"
 }
 
-func calculateCost(hotels []Hotel, transportation RoundTrip, start, end string) []int {
-	totalPrices := make([]int, 0)
-	log.Printf("here")
+func calculateCost(hotel Hotel, transportation RoundTrip, start, end string) int {
 	tStart, err := time.Parse("2006-01-02", start)
 	if err != nil {
 		log.Fatalln(err)
@@ -127,8 +143,12 @@ func calculateCost(hotels []Hotel, transportation RoundTrip, start, end string) 
 		log.Fatalln(err)
 	}
 	numDays := int(tEnd.Sub(tStart).Hours()/24)
-	for _, v := range hotels {
-		totalPrices = append(totalPrices, numDays*int(v.Price) + int(transportation.Cost))
-	}
-	return totalPrices
+	return numDays*int(hotel.Price) + int(transportation.Cost)
+}
+
+func sortVacations(vacations []Vacation) []Vacation{
+	sort.SliceStable(vacations, func(i, j int) bool {
+		return vacations[i].TotalPrice < vacations[j].TotalPrice
+	})
+	return vacations
 }
