@@ -126,7 +126,22 @@ func compute(c *gin.Context) {
 		vacations[obj.Index] = obj.Vacation
 	}
 
-	c.PureJSON(http.StatusOK, sortVacations(vacations))
+
+
+	c.PureJSON(http.StatusOK, parseVacations(budgetI, vacations))
+}
+
+func parseVacations(budget int, vacations []Vacation) []Vacation {
+	underBudget := make([]Vacation, 0)
+	for _, v := range vacations {
+		if v.TotalPrice <= budget {
+			underBudget = append(underBudget, v)
+		}
+	}
+	if len(underBudget) > 0 {
+		return sortVacations(underBudget)
+	}
+	return sortVacations(vacations)
 }
 
 func badInput(end, home string) bool {
