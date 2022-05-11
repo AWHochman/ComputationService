@@ -25,7 +25,8 @@ func hotelThread(i, budget int, start, end, people string, roundTrip *RoundTrip,
 	totalCost := calculateCost(hotel, *roundTrip, start, end)
 	log.Printf("Hotel: %v", hotel)
 	log.Printf("About to initialize vacation object")
-	vacation := Vacation{hotel, *roundTrip, totalCost}
+	attractions := getAttractions(roundTrip, start, end)
+	vacation := Vacation{hotel, *roundTrip, attractions, totalCost}
 	channel <- ReturnChan{vacation, i}
 	// vacations[i] = vacation
 }

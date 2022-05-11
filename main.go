@@ -22,6 +22,7 @@ type ReturnChan struct {
 type Vacation struct {
 	Lodging Hotel 
 	Transportation RoundTrip 
+	Attractions []Attraction
 	TotalPrice int
 }
 
