@@ -77,9 +77,9 @@ func getPort() string {
 
 // /compute?home=SAF&budget=1000&start=2022-05-10&end=2022-05-17&people=2&preference=tropical
 func compute(c *gin.Context) {
-	budget := c.DefaultQuery("budget", "1000") // shortcut for c.Request.URL.Query().Get("budget")
-	start := c.DefaultQuery("start", "-1")
-	end := c.DefaultQuery("end", time.Now().Format("2006-01-02"))
+	budget := c.DefaultQuery("budget", "1000")
+	start := c.DefaultQuery("start", time.Now().Format("2006-01-02"))
+	end := c.DefaultQuery("end", "-1")
 	home := c.DefaultQuery("home", "-1")
 	people := c.DefaultQuery("people", "1")
 	preference := c.DefaultQuery("preference", "major")
