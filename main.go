@@ -29,7 +29,7 @@ type Vacation struct {
 var airportToCords map[string]interface{}
 var HOTEL_SERVICE_ADDRESS string 
 var FLIGHT_SERVICE_ADDRESS string 
-var LOCAL = true 
+var LOCAL = false 
 
 func init() {
 	if LOCAL {
@@ -39,8 +39,8 @@ func init() {
 		FLIGHT_SERVICE_ADDRESS = "https://cloudflightservice.azurewebsites.net/api/QueryFlights"
 		HOTEL_SERVICE_ADDRESS = "https://hotel-service.azurewebsites.net/api/query-hotels"
 	}
-	FLIGHT_SERVICE_ADDRESS = "https://cloudflightservice.azurewebsites.net/api/QueryFlights"
-	HOTEL_SERVICE_ADDRESS = "https://hotel-service.azurewebsites.net/api/query-hotels"
+	// FLIGHT_SERVICE_ADDRESS = "https://cloudflightservice.azurewebsites.net/api/QueryFlights"
+	// HOTEL_SERVICE_ADDRESS = "https://hotel-service.azurewebsites.net/api/query-hotels"
 	// airportToCords = make(map[string]interface{})
 	plan, err := ioutil.ReadFile("Datasets/airports.json")
 	if err != nil {
